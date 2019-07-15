@@ -33,6 +33,12 @@
             <groupId>org.bitbucket.eunjeon</groupId>
             <artifactId>seunjeon_2.12</artifactId>
             <version>1.5.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jsuereth</groupId>
+                    <artifactId>sbt-pgp</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>one.util</groupId>
