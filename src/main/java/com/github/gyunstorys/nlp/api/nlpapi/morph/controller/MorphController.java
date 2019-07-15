@@ -28,7 +28,6 @@ public class MorphController {
      */
     @RequestMapping(value = "/etri")
     public Map<String,Object> getMecabToEtriFormat(String targetText){
-        System.out.println(targetText);
         List result =EntryStream.of(
                 StreamSupport.stream(Analyzer.parseJava(targetText).spliterator(),false)
                         .map(LNode::deInflectJava)
