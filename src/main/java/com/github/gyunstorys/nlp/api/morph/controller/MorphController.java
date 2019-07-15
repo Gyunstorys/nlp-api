@@ -1,4 +1,4 @@
-package com.github.gyunstorys.nlp.api.nlpapi.morph.controller;
+package com.github.gyunstorys.nlp.api.morph.controller;
 
 import one.util.streamex.EntryStream;
 import org.bitbucket.eunjeon.seunjeon.Analyzer;
