@@ -3,13 +3,17 @@ package com.github.gyunstorys.nlp.api.morph.controller;
 import one.util.streamex.EntryStream;
 import org.bitbucket.eunjeon.seunjeon.Analyzer;
 import org.bitbucket.eunjeon.seunjeon.LNode;
+import org.bitbucket.eunjeon.seunjeon.Morpheme;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import scala.Tuple2;
+import scala.collection.JavaConverters;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -28,23 +32,31 @@ public class MorphController {
      */
     @RequestMapping(value = "/etri")
     public Map<String,Object> getMecabToEtriFormat(String targetText){
-        List result =EntryStream.of(
-                StreamSupport.stream(Analyzer.parseJava(targetText).spliterator(),false)
-                        .map(LNode::deInflectJava)
-                        .flatMap(e-> e.stream())
-                        .collect(Collectors.toList())
-        ).map(entry -> {
-            int key = entry.getKey();
-            LNode morph = entry.getValue();
-            Map<String, Object> morphResult = new LinkedHashMap<>();
-            morphResult.put("id", key);
-//            morphResult.put("position", morph.beginOffset());
-            morphResult.put("position", targetText.substring(0,morph.beginOffset()).getBytes().length);
-            morphResult.put("weight", morph.accumulatedCost());
-            morphResult.put("type", convertEtriPosTag(morph));
-            morphResult.put("lemma", morph.morpheme().getSurface());
-            return morphResult;
-        }).collect(Collectors.toList());
+        AtomicInteger atomicInteger = new AtomicInteger();
+        List result =
+                StreamSupport.stream(Analyzer.parseJava(targetText).spliterator(),false).map(e->{
+                            List<Morpheme> morphemes = JavaConverters.seqAsJavaList(e.morpheme().deComposite());
+                            if (morphemes.size() == 0)
+                                morphemes = new ArrayList<Morpheme>() {{
+                                    add(e.morpheme());
+                                }};
+                            return new Tuple2<LNode,List<Morpheme>>(e,morphemes);
+                        }
+                ).map(lnode -> {
+                    List<Map<String,Object>> data = new ArrayList<>();
+                    for (Morpheme morph : lnode._2){
+                        Map<String, Object> morphResult = new LinkedHashMap<>();
+                        morphResult.put("id", atomicInteger.getAndIncrement());
+                        morphResult.put("position", targetText.substring(0, lnode._1.beginOffset()).getBytes().length);
+                        morphResult.put("weight", morph.getCost());
+                        morphResult.put("type", morph.getFeatureHead());
+                        morphResult.put("lemma", morph.getSurface());
+                        data.add(morphResult);
+                    }
+                    return data;
+                }).
+                        flatMap(e->e.stream())
+                        .collect(Collectors.toList());
         Map<String,Object> response = new LinkedHashMap<>();
         response.put("request_id","reserved field");
         response.put("result",0);
