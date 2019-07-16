@@ -58,7 +58,7 @@ public class MorphController {
                             morphResult.put("id", atomicInteger.getAndIncrement());
                             morphResult.put("position", targetText.substring(0, lnode._1.beginOffset()).getBytes().length);
                             morphResult.put("weight", morph.getCost());
-                            morphResult.put("type", morph.getFeatureHead());
+                            morphResult.put("type", convertEtriPosTag(morph.getSurface(),morph.getFeatureHead()));
                             morphResult.put("lemma", morph.getSurface());
                             data.add(morphResult);
                         }
@@ -82,8 +82,7 @@ public class MorphController {
 
     }
 
-    private String convertEtriPosTag(LNode morph) {
-        String pos =  morph.morpheme().getFeatureHead();
+    public static String convertEtriPosTag(String surface,String pos) {
         List<String> swPOS = new ArrayList<String>(){{
             add("@");
             add("#");
@@ -110,9 +109,9 @@ public class MorphController {
             return "NNB";
         else if (pos.equals("SSO") || pos.equals("SSC"))
             return "SS";
-        else if (swPOS.contains(morph.morpheme().getSurface()))
+        else if (swPOS.contains(surface))
             return "SW";
-        else if (soPOS.contains(morph.morpheme().getSurface()))
+        else if (soPOS.contains(surface))
             return "SO";
         else if (pos.equals("SY"))
             return "SW";
