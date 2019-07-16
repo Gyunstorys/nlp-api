@@ -33,43 +33,53 @@ public class MorphController {
     @RequestMapping(value = "/etri")
     public Map<String,Object> getMecabToEtriFormat(String targetText){
         AtomicInteger atomicInteger = new AtomicInteger();
-        List result =
-                StreamSupport.stream(Analyzer.parseJava(targetText).spliterator(),false).map(e->{
-                            List<Morpheme> morphemes = JavaConverters.seqAsJavaList(e.morpheme().deComposite());
-                            if (morphemes.size() == 0)
-                                morphemes = new ArrayList<Morpheme>() {{
-                                    add(e.morpheme());
-                                }};
-                            return new Tuple2<LNode,List<Morpheme>>(e,morphemes);
-                        }
-                ).map(lnode -> {
-                    List<Map<String,Object>> data = new ArrayList<>();
-                    for (Morpheme morph : lnode._2){
-                        Map<String, Object> morphResult = new LinkedHashMap<>();
-                        morphResult.put("id", atomicInteger.getAndIncrement());
-                        morphResult.put("position", targetText.substring(0, lnode._1.beginOffset()).getBytes().length);
-                        morphResult.put("weight", morph.getCost());
-                        morphResult.put("type", morph.getFeatureHead());
-                        morphResult.put("lemma", morph.getSurface());
-                        data.add(morphResult);
-                    }
-                    return data;
-                }).
-                        flatMap(e->e.stream())
-                        .collect(Collectors.toList());
         Map<String,Object> response = new LinkedHashMap<>();
         response.put("request_id","reserved field");
         response.put("result",0);
         response.put("return_type","com.google.gson.internal.LinkedTreeMap");
         response.put("return_object","com.google.gson.internal.LinkedTreeMap");
-        response.put("sentences",new ArrayList(){{
-            add(new LinkedHashMap<String,Object>(){{
-                put("id",0);
-                put("text",targetText);
-                put("morp",result);
+        try {
+            List result =
+                    StreamSupport.stream(Analyzer.parseJava(targetText).spliterator(), false)
+                            .map(e -> e.deCompoundJava())
+                            .flatMap(e -> e.stream())
+                            .map(e -> {
+                                        List<Morpheme> morphemes = JavaConverters.seqAsJavaList(e.morpheme().deComposite());
+                                        if (morphemes.size() == 0)
+                                            morphemes = new ArrayList<Morpheme>() {{
+                                                add(e.morpheme());
+                                            }};
+                                        return new Tuple2<>(e, morphemes);
+                                    }
+                            ).map(lnode -> {
+                        List<Map<String, Object>> data = new ArrayList<>();
+                        for (Morpheme morph : lnode._2) {
+                            Map<String, Object> morphResult = new LinkedHashMap<>();
+                            morphResult.put("id", atomicInteger.getAndIncrement());
+                            morphResult.put("position", targetText.substring(0, lnode._1.beginOffset()).getBytes().length);
+                            morphResult.put("weight", morph.getCost());
+                            morphResult.put("type", morph.getFeatureHead());
+                            morphResult.put("lemma", morph.getSurface());
+                            data.add(morphResult);
+                        }
+                        return data;
+                    }).flatMap(e -> e.stream()).collect(Collectors.toList());
+
+            response.put("sentences",new ArrayList(){{
+                add(new LinkedHashMap<String,Object>(){{
+                    put("id",0);
+                    put("text",targetText);
+                    put("morp",result);
+                }});
             }});
-        }});
+            return response;
+        }catch (Exception e){
+            System.out.println(targetText);
+            e.printStackTrace();
+        }
+        response.put("result",1);
         return response;
+
     }
 
     private String convertEtriPosTag(LNode morph) {
