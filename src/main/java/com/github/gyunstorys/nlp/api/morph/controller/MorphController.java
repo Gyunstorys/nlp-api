@@ -3,7 +3,9 @@ package com.github.gyunstorys.nlp.api.morph.controller;
 import com.codepoetics.protonpack.StreamUtils;
 import kr.bydelta.koala.hnn.SentenceSplitter;
 import org.bitbucket.eunjeon.seunjeon.Analyzer;
+import org.bitbucket.eunjeon.seunjeon.LNode;
 import org.bitbucket.eunjeon.seunjeon.Morpheme;
+import org.openkoreantext.processor.OpenKoreanTextProcessorJava;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import scala.Tuple2;
@@ -38,24 +40,81 @@ public class MorphController {
         response.put("result",0);
         response.put("return_type","com.google.gson.internal.LinkedTreeMap");
         response.put("return_object","com.google.gson.internal.LinkedTreeMap");
-        SentenceSplitter splitter = new SentenceSplitter();
         try {
-            AtomicInteger preSentenceLength = new AtomicInteger();
-            List<Map<String,Object>> result = StreamUtils.zipWithIndex(splitter.jSentences(targetText).stream())
+            List result =
+                    StreamSupport.stream(Analyzer.parseJava(targetText).spliterator(), false)
+                            .map(e -> e.deCompoundJava())
+                            .flatMap(e -> e.stream())
+                            .map(e -> {
+                                        List<Morpheme> morphemes = JavaConverters.seqAsJavaList(e.morpheme().deComposite());
+                                        if (morphemes.size() == 0)
+                                            morphemes = new ArrayList<Morpheme>() {{
+                                                add(e.morpheme());
+                                            }};
+                                        return new Tuple2<>(e, morphemes);
+                                    }
+                            ).map(lnode -> {
+                        List<Map<String, Object>> data = new ArrayList<>();
+                        for (Morpheme morph : lnode._2) {
+                            Map<String, Object> morphResult = new LinkedHashMap<>();
+                            morphResult.put("id", atomicInteger.getAndIncrement());
+                            morphResult.put("position", targetText.substring(0, lnode._1.beginOffset()).getBytes().length);
+                            morphResult.put("weight", morph.getCost());
+                            morphResult.put("type", convertEtriPosTag(morph.getSurface(),morph.getFeatureHead()));
+                            morphResult.put("lemma", morph.getSurface());
+                            data.add(morphResult);
+                        }
+                        return data;
+                    }).flatMap(e -> e.stream()).collect(Collectors.toList());
+
+            response.put("sentences",new ArrayList(){{
+                add(new LinkedHashMap<String,Object>(){{
+                    put("id",0);
+                    put("text",targetText);
+                    put("morp",result);
+                }});
+            }});
+            return response;
+        }catch (Exception e){
+            System.out.println(targetText);
+            e.printStackTrace();
+        }
+        response.put("result",1);
+        return response;
+
+    }
+
+    @RequestMapping(value = "/etri/sentences")
+    public Map<String,Object> getMecabToEtriFormatSentence(String targetText){
+        AtomicInteger atomicInteger = new AtomicInteger();
+        Map<String,Object> response = new LinkedHashMap<>();
+        response.put("request_id","reserved field");
+        response.put("result",0);
+        response.put("return_type","com.google.gson.internal.LinkedTreeMap");
+        response.put("return_object","com.google.gson.internal.LinkedTreeMap");
+        try {
+            List<Map<String,Object>> result = StreamUtils.zipWithIndex(OpenKoreanTextProcessorJava.splitSentences(targetText).stream())
                     .map(sentence->
                     {
+                        int start = sentence.getValue().start();
+                        int end = sentence.getValue().end();
+                        String sentenceStr = targetText.substring(start,end);
+                        List<LNode> sentenceNodes= StreamSupport.stream(Analyzer.parseJava(sentenceStr,true).spliterator(),false)
+                                .collect(Collectors.toList());
                         Map<String, Object> resultSentence = new LinkedHashMap<>();
                         resultSentence.put("id",sentence.getIndex());
-                        resultSentence.put("text",sentence.getValue());
-                        resultSentence.put("morph",StreamSupport.stream(Analyzer.parseJava(sentence.getValue()).spliterator(), false)
+                        resultSentence.put("text",targetText.substring(start,end));
+                        resultSentence.put("morph",sentenceNodes.stream()
                                 .map(e -> e.deCompoundJava())
                                 .flatMap(e -> e.stream())
                                 .map(e -> {
-                                            List<Morpheme> morphemes = JavaConverters.seqAsJavaList(e.morpheme().deComposite());
-                                            if (morphemes.size() == 0)
+                                            List<Morpheme> morphemes = null;
+                                            if (e.morpheme().getPoses().size()==1)
                                                 morphemes = new ArrayList<Morpheme>() {{
                                                     add(e.morpheme());
                                                 }};
+                                            else
+                                                morphemes = JavaConverters.seqAsJavaList(e.morpheme().deComposite());
                                             return new Tuple2<>(e, morphemes);
                                         }
                                 )
@@ -64,7 +123,7 @@ public class MorphController {
                                     for (Morpheme morph : lnode._2) {
                                         Map<String, Object> morphResult = new LinkedHashMap<>();
                                         morphResult.put("id", atomicInteger.getAndIncrement());
-                                        morphResult.put("position", preSentenceLength.get()+sentence.getValue().substring(0, lnode._1.beginOffset()).getBytes().length);
+                                        morphResult.put("position", targetText.substring(0, start+lnode._1.beginOffset()).getBytes().length);
                                         morphResult.put("weight", morph.getCost());
                                         morphResult.put("type", convertEtriPosTag(morph.getSurface(), morph.getFeatureHead()));
                                         morphResult.put("lemma", morph.getSurface());
@@ -73,7 +132,6 @@ public class MorphController {
                                     return morphemes;
                                 }).flatMap(e->e.stream())
                                 .collect(Collectors.toList()));
-                        preSentenceLength.addAndGet(sentence.getValue().getBytes().length);
                         return resultSentence;
                     }).collect(Collectors.toList());
             response.put("sentences",result);
@@ -120,6 +178,8 @@ public class MorphController {
             return "SO";
         else if (pos.equals("SY"))
             return "SW";
+        else if (pos.equals("UN"))
+            return "UNK";
         return pos;
     }
 }
