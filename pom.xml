@@ -29,6 +29,19 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/kr.bydelta/koalanlp-hannanum -->
+        <dependency>
+            <groupId>kr.bydelta</groupId>
+            <artifactId>koalanlp-hannanum_2.12</artifactId>
+            <classifier>assembly</classifier>
+            <version>1.9.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.bitbucket.eunjeon</groupId>
             <artifactId>seunjeon_2.12</artifactId>
@@ -39,6 +52,11 @@
                     <artifactId>sbt-pgp</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.codepoetics</groupId>
+            <artifactId>protonpack</artifactId>
+            <version>1.13</version>
         </dependency>
         <dependency>
             <groupId>one.util</groupId>
