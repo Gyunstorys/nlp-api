@@ -2,9 +2,7 @@ package com.github.gyunstorys.nlp.api.morph.controller;
 
 import com.codepoetics.protonpack.StreamUtils;
 import kr.bydelta.koala.hnn.SentenceSplitter;
-import one.util.streamex.EntryStream;
 import org.bitbucket.eunjeon.seunjeon.Analyzer;
-import org.bitbucket.eunjeon.seunjeon.LNode;
 import org.bitbucket.eunjeon.seunjeon.Morpheme;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,7 +45,6 @@ public class MorphController {
                     .map(sentence->
                     {
                         Map<String, Object> resultSentence = new LinkedHashMap<>();
-                        preSentenceLength.addAndGet(sentence.getValue().getBytes().length);
                         resultSentence.put("id",sentence.getIndex());
                         resultSentence.put("text",sentence.getValue());
                         resultSentence.put("morph",StreamSupport.stream(Analyzer.parseJava(sentence.getValue()).spliterator(), false)
@@ -76,6 +73,7 @@ public class MorphController {
                                     return morphemes;
                                 }).flatMap(e->e.stream())
                                 .collect(Collectors.toList()));
+                        preSentenceLength.addAndGet(sentence.getValue().getBytes().length);
                         return resultSentence;
                     }).collect(Collectors.toList());
             response.put("sentences",result);
