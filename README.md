@@ -78,9 +78,7 @@ https://docs.google.com/spreadsheets/d/1OGAjUvalBuX-oZvZ_-9tEfYD2gQe7hTGsgUpiiBS
     * SSO	여는 괄호 (, [ 
         * SS 따옴표,괄호표,줄표
     * SSC	닫는 괄호 ), ] 
-        * SS 따옴표,괄호표,줄표
-    * SSC	닫는 괄호 ), ] 
-        * SS 따옴표,괄호표,줄표
+        * SS 따옴표,괄호표,줄표 
     * SC	구분자 , · / :
         * SP 쉼표,가운뎃점,콜론,빗금
     * SY    기타기호
