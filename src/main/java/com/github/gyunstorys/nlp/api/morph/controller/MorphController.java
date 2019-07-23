@@ -32,6 +32,11 @@ public class MorphController {
     @Value("${dictionary.path}")
     private String path;
 
+    /**
+     * Load user dictionary response vo.
+     *
+     * @return the response vo
+     */
     @PostConstruct
     @RequestMapping(value = "/dictionary")
     public ResponseVo loadUserDictionary(){
@@ -62,6 +67,7 @@ public class MorphController {
         return responseVo;
 
     }
+
     /**
      * Get mecab to etri format map.
      *
@@ -120,6 +126,12 @@ public class MorphController {
 
     }
 
+    /**
+     * Get mecab to etri format sentence map.
+     *
+     * @param targetText the target text
+     * @return the map
+     */
     @RequestMapping(value = "/etri/sentences")
     public Map<String,Object> getMecabToEtriFormatSentence(String targetText){
         AtomicInteger atomicInteger = new AtomicInteger();
@@ -181,25 +193,31 @@ public class MorphController {
 
     }
 
+    private static final Set<String> SW_POS = new HashSet<String>(){{
+        add("@");
+        add("#");
+        add("$");
+        add("%");
+        add("^");
+        add("&");
+        add("*");
+        add("_");
+        add("+");
+        add("=");
+        add("`");
+    }};
+    private static final Set<String> SO_POS = new HashSet<String>(){{
+        add("~");
+        add("-");
+    }};
+    /**
+     * Convert etri pos tag string.
+     *
+     * @param surface the surface
+     * @param pos     the pos
+     * @return the string
+     */
     public static String convertEtriPosTag(String surface,String pos) {
-        List<String> swPOS = new ArrayList<String>(){{
-            add("@");
-            add("#");
-            add("$");
-            add("%");
-            add("^");
-            add("&");
-            add("*");
-            add("_");
-            add("+");
-            add("=");
-            add("`");
-        }};
-        List<String> soPOS = new ArrayList<String>(){{
-            add("~");
-            add("-");
-        }};
-
         if (pos.equals("SF"))
             return pos;
         else if (pos.equals("SC"))
@@ -208,9 +226,9 @@ public class MorphController {
             return "NNB";
         else if (pos.equals("SSO") || pos.equals("SSC"))
             return "SS";
-        else if (swPOS.contains(surface))
+        else if (SW_POS.contains(surface))
             return "SW";
-        else if (soPOS.contains(surface))
+        else if (SO_POS.contains(surface))
             return "SO";
         else if (pos.equals("SY"))
             return "SW";
