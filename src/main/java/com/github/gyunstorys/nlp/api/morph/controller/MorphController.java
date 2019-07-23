@@ -192,6 +192,10 @@ public class MorphController {
         return response;
 
     }
+    private static final Set<String> SS_POS = new HashSet<String>(){{
+        add("\"");
+        add("'");
+    }};
 
     private static final Set<String> SW_POS = new HashSet<String>(){{
         add("@");
@@ -225,6 +229,8 @@ public class MorphController {
         else if (pos.equals("NNBC"))
             return "NNB";
         else if (pos.equals("SSO") || pos.equals("SSC"))
+            return "SS";
+        else if (SS_POS.contains(surface))
             return "SS";
         else if (SW_POS.contains(surface))
             return "SW";

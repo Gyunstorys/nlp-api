@@ -82,10 +82,15 @@ https://docs.google.com/spreadsheets/d/1OGAjUvalBuX-oZvZ_-9tEfYD2gQe7hTGsgUpiiBS
     * SC	구분자 , · / :
         * SP 쉼표,가운뎃점,콜론,빗금
     * SY    기타기호
-        * SW 기타기호(논리수학기호,화폐기호)와 SO 붙임표(물결,숨김,빠짐) 두가지로 분리 하였습니다.
+        * SW 기타기호(논리수학기호,화폐기호)와 SO 붙임표(물결,숨김,빠짐) SS(따움표) 세가지로 분리 하였습니다.
           	
-<pre><code>
-private static final Set<String> SW_POS = new HashSet<String>(){{
+```java
+ private static final Set<String> SS_POS = new HashSet<String>(){{
+        add("\"");
+        add("'");
+    }};
+
+    private static final Set<String> SW_POS = new HashSet<String>(){{
         add("@");
         add("#");
         add("$");
@@ -118,6 +123,8 @@ private static final Set<String> SW_POS = new HashSet<String>(){{
             return "NNB";
         else if (pos.equals("SSO") || pos.equals("SSC"))
             return "SS";
+        else if (SS_POS.contains(surface))
+            return "SS";
         else if (SW_POS.contains(surface))
             return "SW";
         else if (SO_POS.contains(surface))
@@ -128,7 +135,7 @@ private static final Set<String> SW_POS = new HashSet<String>(){{
             return "UNK";
         return pos;
     }
-</code></pre>
+```
 ### 3. 사용 한 라이브러리
 * seunjeon(은전한닢)
     * https://bitbucket.org/eunjeon/seunjeon/src/master/
