@@ -1,5 +1,5 @@
 # nlp-api
-## ETRI KoBERT에서 사용하기 위해 만든 ETRI 형태소 분석기를 대체 할 Mecab형태소 분석기 API
+## ETRI KoBERT에서 사용하기 위해 만든 Mecab 형태소 분석기 API
 
 ### 1. Usages
 테스트는 우분투 및 osx에서 진행하였고 java로 코드를 작성하였기 때문에 OS와 관계없이 JDK만 설치되어 있으면 구동 
@@ -74,7 +74,7 @@ Response
 ### 2. mecab 품사 태그 > 세종 품사 태그 규칙
 * konlpy에서 제공하는 품사 태그 비교표를 참조하여 작성하였습니다.</br>
 https://docs.google.com/spreadsheets/d/1OGAjUvalBuX-oZvZ_-9tEfYD2gQe7hTGsgUpiiBSXI8/edit#gid=0
-* 차이점 (왼쪽이 mecab태그 이고 우측이 세종태그 입니다.)
+* 차이점 (위쪽이 mecab태그 이고 아래가 세종태그 입니다.)
     * SSO	여는 괄호 (, [ 
         * SS 따옴표,괄호표,줄표
     * SSC	닫는 괄호 ), ] 
