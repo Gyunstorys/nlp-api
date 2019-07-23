@@ -1,20 +1,24 @@
 package com.github.gyunstorys.nlp.api.morph.controller;
 
 import com.codepoetics.protonpack.StreamUtils;
-import kr.bydelta.koala.hnn.SentenceSplitter;
+import com.github.gyunstorys.nlp.api.morph.vo.ResponseVo;
 import org.bitbucket.eunjeon.seunjeon.Analyzer;
 import org.bitbucket.eunjeon.seunjeon.LNode;
 import org.bitbucket.eunjeon.seunjeon.Morpheme;
 import org.openkoreantext.processor.OpenKoreanTextProcessorJava;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import scala.Tuple2;
 import scala.collection.JavaConverters;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.PostConstruct;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -25,7 +29,39 @@ import java.util.stream.StreamSupport;
 @RestController
 @RequestMapping(value = "/api/morpheme")
 public class MorphController {
+    @Value("${dictionary.path}")
+    private String path;
 
+    @PostConstruct
+    @RequestMapping(value = "/dictionary")
+    public ResponseVo loadUserDictionary(){
+        System.out.println("경로 : " + path);
+        ResponseVo responseVo = new ResponseVo();
+        try(BufferedReader br =new BufferedReader(new InputStreamReader(new FileInputStream(new File(path))))){
+            String temp = null;
+            Set<String> dictionary = new LinkedHashSet<>();
+            while ((temp=br.readLine())!=null){
+                temp = temp.trim();
+                if (StringUtils.isEmpty(temp) || temp.startsWith("#"))
+                    continue;
+                String[] arr = temp.split("\\s");
+                for (String noun : arr){
+                    System.out.println(noun);
+                    dictionary.add(noun);
+                }
+                responseVo.setData(dictionary);
+                responseVo.setMessage("사전 로드 성공");
+            }
+            Analyzer.setUserDict(dictionary.iterator());
+        }catch (Exception e){
+            e.printStackTrace();
+            responseVo.setMessage("사전 로드 실패");
+            responseVo.setCode(1);
+        }
+        System.out.println(responseVo);
+        return responseVo;
+
+    }
     /**
      * Get mecab to etri format map.
      *
