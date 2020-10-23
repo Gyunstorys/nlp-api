@@ -1,5 +1,6 @@
 # nlp-api
 ## ETRI KoBERT에서 사용하기 위해 만든 Mecab 형태소 분석기 API
+https://github.com/domyounglee/korbert-mecab-multigpu 이 소스와 같이 사용하시면 됩니다.
 
 ### 1. Usages
 테스트는 우분투 및 osx에서 진행하였고 java로 코드를 작성하였기 때문에 OS와 관계없이 JDK만 설치되어 있으면 구동 
